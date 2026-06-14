@@ -71,9 +71,10 @@ async function main() {
     electron.app.commandLine.appendSwitch('no-sandbox')
     electron.app.commandLine.appendSwitch('disable-gpu-sandbox')
     electron.app.commandLine.appendSwitch('ignore-gpu-blocklist')
-    electron.app.commandLine.appendSwitch('use-gl', 'angle')
-    electron.app.commandLine.appendSwitch('use-angle', 'gles')
-    electron.app.commandLine.appendSwitch('disable-software-rasterizer')
+    electron.app.commandLine.appendSwitch('use-gl', 'egl-angle')
+    electron.app.commandLine.appendSwitch('use-angle', 'opengles')
+    electron.app.commandLine.appendSwitch('in-process-gpu')
+    electron.app.commandLine.appendSwitch('disable-gpu-memory-buffer-video-frames')
     electron.app.commandLine.appendSwitch('ozone-platform', 'wayland')
     electron.app.commandLine.appendSwitch('js-flags', '--max-old-space-size=512')
 
