@@ -64,8 +64,18 @@ async function main() {
     }
 
     if (runningOnSteam) {
-        electron.app.commandLine.appendSwitch('--no-sandbox') //won't run without this in game mode for me
+        electron.app.commandLine.appendSwitch('no-sandbox') //won't run without this in game mode for me
     }
+
+    // Tanix TX9 Pro (S912 / Mali-T820) Optimizations
+    electron.app.commandLine.appendSwitch('no-sandbox')
+    electron.app.commandLine.appendSwitch('disable-gpu-sandbox')
+    electron.app.commandLine.appendSwitch('ignore-gpu-blocklist')
+    electron.app.commandLine.appendSwitch('use-gl', 'angle')
+    electron.app.commandLine.appendSwitch('use-angle', 'gles')
+    electron.app.commandLine.appendSwitch('disable-software-rasterizer')
+    electron.app.commandLine.appendSwitch('ozone-platform', 'wayland')
+    electron.app.commandLine.appendSwitch('js-flags', '--max-old-space-size=512')
 
     config = configManager.init({
         fullscreen: !!runningOnSteam //if running on steam in game mode, override fullscreen to be on by default (note that this was broken from 1.3.0 until 1.3.6 due to config bug)
