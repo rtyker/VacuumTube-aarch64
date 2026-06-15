@@ -77,6 +77,22 @@ async function main() {
         fullscreen: !!runningOnSteam //if running on steam in game mode, override fullscreen to be on by default (note that this was broken from 1.3.0 until 1.3.6 due to config bug)
     })
 
+    //config management on the web side
+    electron.ipcMain.on('get-config', (event) => {
+        event.returnValue = config;
+    })
+
+    electron.ipcMain.on('set-config', (event, newConfig) => {
+        configManager.update(newConfig)
+        config = configManager.get()
+
+        if (win) {
+            win.webContents.send('config-update', config)
+        }
+
+        event.returnValue = config;
+    })
+
     if (process.platform === 'linux' && !config.wayland_hdr) {
         electron.app.commandLine.appendSwitch('--disable-features', 'WaylandWpColorManagerV1') //colors on wayland are super washed out in newer chromium versions for some reason, but this seems to fix it
     }
@@ -203,22 +219,6 @@ async function main() {
         callback({
             requestHeaders: details.requestHeaders
         })
-    })
-
-    //config management on the web side
-    electron.ipcMain.on('get-config', (event) => {
-        event.returnValue = config;
-    })
-
-    electron.ipcMain.on('set-config', (event, newConfig) => {
-        configManager.update(newConfig)
-        config = configManager.get()
-
-        if (win) {
-            win.webContents.send('config-update', config)
-        }
-
-        event.returnValue = config;
     })
 
     //etc helpers
