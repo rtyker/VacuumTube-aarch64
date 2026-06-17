@@ -35,20 +35,34 @@ ipcRenderer.on('blur', () => {
     focused = false;
 })
 
+const loggedGamepads = {}
 requestAnimationFrame(pollGamepads)
 
 function pollGamepads() {
     const gamepads = navigator.getGamepads()
     for (let index in pressedButtons) {
-        if (!gamepads[index]) pressedButtons[index] = null;
+        if (!gamepads[index]) {
+            pressedButtons[index] = null;
+            delete loggedGamepads[index];
+        }
     }
 
     const steamInput = gamepads.find(g => g && g.id.endsWith('(STANDARD GAMEPAD Vendor: 28de Product: 11ff)'))
     if (steamInput) { //the one true controller here
+        if (!loggedGamepads[steamInput.index]) {
+            console.log(`[Gamepad] Steam controller connected: index=${steamInput.index}, id="${steamInput.id}", mapping="${steamInput.mapping}", buttons=${steamInput.buttons.length}, axes=${steamInput.axes.length}`);
+            loggedGamepads[steamInput.index] = true;
+        }
         handleGamepad(steamInput)
     } else {
         for (let gamepad of gamepads) {
-            if (gamepad && gamepad.connected) handleGamepad(gamepad)
+            if (gamepad && gamepad.connected) {
+                if (!loggedGamepads[gamepad.index]) {
+                    console.log(`[Gamepad] Gamepad connected: index=${gamepad.index}, id="${gamepad.id}", mapping="${gamepad.mapping}", buttons=${gamepad.buttons.length}, axes=${gamepad.axes.length}`);
+                    loggedGamepads[gamepad.index] = true;
+                }
+                handleGamepad(gamepad)
+            }
         }
     }
 
@@ -66,12 +80,14 @@ function handleGamepad(gamepad) {
         let buttonWasPressed = pressedButtons[index][i]
 
         if (button.pressed && !buttonWasPressed) {
+            console.log(`[Gamepad] Gamepad index=${index} button ${i} PRESSED (value=${button.value})`);
             hasPressedButton = true;
             pressedButtons[index][i] = true;
             buttonDown(code)
             stopKeyRepeat()
             buttonRepeatTimeout = setTimeout(() => startButtonRepeat(code), buttonRepeatDelay)
         } else if (!button.pressed && buttonWasPressed) {
+            console.log(`[Gamepad] Gamepad index=${index} button ${i} RELEASED`);
             pressedButtons[index][i] = false;
             buttonUp(code)
             stopKeyRepeat()
@@ -85,34 +101,35 @@ function handleGamepad(gamepad) {
 
         let code = null;
 
-        if (i === 0) { //left stick
+        if (i === 0 || (gamepad.mapping !== 'standard' && i === 4)) { //left stick X or non-standard D-pad X
             if (axisValue > 0.5) {
                 code = 1013; //right
             } else if (axisValue < -0.5) {
                 code = 1011; //left
             }
-        } else if (i === 1) { //left stick
+        } else if (i === 1 || (gamepad.mapping !== 'standard' && i === 5)) { //left stick Y or non-standard D-pad Y
             if (axisValue > 0.5) {
                 code = 1014; //down
             } else if (axisValue < -0.5) {
                 code = 1012; //up
             }
-        } if (i === 3) { //right stick
+        } else if (i === 2) { // right stick X (non-standard usually has it here) or standard right X
             if (axisValue > 0.5) {
-                keyCode = 1017; //right
+                code = 1017; //right
             } else if (axisValue < -0.5) {
-                keyCode = 1015; //left
+                code = 1015; //left
             }
-        } else if (i === 4) { //right stick
+        } else if (i === 3) { // right stick Y (standard or non-standard)
             if (axisValue > 0.5) {
-                keyCode = 1018; //down
+                code = 1018; //down
             } else if (axisValue < -0.5) {
-                keyCode = 1016; //up
+                code = 1016; //up
             }
         }
 
         if (code) {
             if (!axisWasPressed) {
+                console.log(`[Gamepad] Gamepad index=${index} axis ${i} MOVED to ${axisValue} -> virtual key ${code}`);
                 hasPressedButton = true;
                 pressedButtons[index][axisIndex] = true;
                 buttonDown(code)
@@ -121,6 +138,7 @@ function handleGamepad(gamepad) {
             }
         } else {
             if (axisWasPressed) {
+                console.log(`[Gamepad] Gamepad index=${index} axis ${i} RELEASED`);
                 pressedButtons[index][axisIndex] = false;
                 buttonUp(code)
                 stopKeyRepeat()

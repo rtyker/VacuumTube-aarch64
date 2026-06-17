@@ -102,11 +102,11 @@ module.exports = async () => {
 
         const volumeStep = 5;
 
-        if (key === '+' || key === '=' || key === 187) {
+        if (key === '+' || key === '=' || key === 187 || key === 175 || key === 'AudioVolumeUp') {
             volume = Math.min(100, volume + volumeStep)
-        } else if (key === '-' || key === 189) {
+        } else if (key === '-' || key === 189 || key === 174 || key === 'AudioVolumeDown') {
             volume = Math.max(0, volume - volumeStep)
-        } else if (key === 'm' || key === 'M' || key === 77) {
+        } else if (key === 'm' || key === 'M' || key === 77 || key === 173 || key === 'AudioVolumeMute') {
             muted = !muted;
         } else {
             return;
